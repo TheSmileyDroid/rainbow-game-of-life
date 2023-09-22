@@ -3,62 +3,48 @@
 #include <unistd.h>
 #include <time.h>
 
-#define ITERNUM 100
-#define DEFAULT_N 10
+#define ITERNUM 2001
+#define N 2048
+#define USEC 1000000
+#define SLEEP_TIME 0.001
 
-float getCell(float **grid, int i, int j, int N)
+float getCell(float **grid, int i, int j)
 {
-    if (i < 0)
-    {
-        i = N - 1;
-    }
-    else if (i >= N)
-    {
-        i = 0;
-    }
-    if (j < 0)
-    {
-        j = N - 1;
-    }
-    else if (j >= N)
-    {
-        j = 0;
-    }
-    return grid[i][j];
+    return grid[(i + N) % N][(j + N) % N];
 }
 
-int getNeighbors(float **grid, int i, int j, int N)
+int getNeighbors(float **grid, int i, int j)
 {
     int neighbors = 0;
-    if (getCell(grid, i - 1, j - 1, N) > 0.0)
+    if (getCell(grid, i - 1, j - 1) > 0.0f)
     {
         neighbors++;
     }
-    if (getCell(grid, i - 1, j, N) > 0.0)
+    if (getCell(grid, i - 1, j) > 0.0f)
     {
         neighbors++;
     }
-    if (getCell(grid, i - 1, j + 1, N) > 0.0)
+    if (getCell(grid, i - 1, j + 1) > 0.0f)
     {
         neighbors++;
     }
-    if (getCell(grid, i, j - 1, N) > 0.0)
+    if (getCell(grid, i, j - 1) > 0.0f)
     {
         neighbors++;
     }
-    if (getCell(grid, i, j + 1, N) > 0.0)
+    if (getCell(grid, i, j + 1) > 0.0f)
     {
         neighbors++;
     }
-    if (getCell(grid, i + 1, j - 1, N) > 0.0)
+    if (getCell(grid, i + 1, j - 1) > 0.0f)
     {
         neighbors++;
     }
-    if (getCell(grid, i + 1, j, N) > 0.0)
+    if (getCell(grid, i + 1, j) > 0.0f)
     {
         neighbors++;
     }
-    if (getCell(grid, i + 1, j + 1, N) > 0.0)
+    if (getCell(grid, i + 1, j + 1) > 0.0f)
     {
         neighbors++;
     }
@@ -72,51 +58,65 @@ void swap(float ***grid, float ***newgrid)
     *newgrid = temp;
 }
 
-void iterate(float **grid, float **newgrid, int x, int y)
+float average(float **grid, int i, int j)
 {
-    for (int i = 0; i < x; i++)
+    float sum = 0.0f;
+    sum += getCell(grid, i - 1, j - 1);
+    sum += getCell(grid, i - 1, j);
+    sum += getCell(grid, i - 1, j + 1);
+    sum += getCell(grid, i, j - 1);
+    sum += getCell(grid, i, j + 1);
+    sum += getCell(grid, i + 1, j - 1);
+    sum += getCell(grid, i + 1, j);
+    sum += getCell(grid, i + 1, j + 1);
+    return sum / 8.0f;
+}
+
+void iterate(float **grid, float **newgrid)
+{
+    for (int i = 0; i < N; i++)
     {
-        for (int j = 0; j < y; j++)
+        for (int j = 0; j < N; j++)
         {
-            int neighbors = getNeighbors(grid, i, j, x);
-            if (grid[i][j] > 0.0)
+            int neighbors = getNeighbors(grid, i, j);
+            if (grid[i][j] > 0.0f)
             {
                 if (neighbors < 2)
                 {
-                    newgrid[i][j] = 0.0;
+                    newgrid[i][j] = 0.0f;
                 }
                 else if (neighbors == 2 || neighbors == 3)
                 {
-                    newgrid[i][j] = 1.0;
+                    newgrid[i][j] = 1.0f;
                 }
                 else if (neighbors > 3)
                 {
-                    newgrid[i][j] = 0.0;
+                    newgrid[i][j] = 0.0f;
                 }
             }
             else
             {
                 if (neighbors == 3)
                 {
-                    newgrid[i][j] = 1.0;
+                    newgrid[i][j] = average(grid, i, j);
                 }
                 else
                 {
-                    newgrid[i][j] = 0.0;
+                    newgrid[i][j] = 0.0f;
                 }
             }
         }
     }
 }
 
-int numberOfCells(float **grid, int N)
+int numberOfCells(float **grid)
 {
     int cells = 0;
-    for (int i = 0; i < N - 1; i++)
+    for (int i = 0; i < N; i++)
     {
-        for (int j = 0; j < N - 1; j++)
+        for (int j = 0; j < N; j++)
         {
-            if (grid[i][j] > 0.0)
+            if (grid[i][j] > 0.0f)
             {
                 cells++;
             }
@@ -127,26 +127,38 @@ int numberOfCells(float **grid, int N)
 
 void clearStdout() { printf("\033[H\033[J"); }
 
-void printGrid(float **grid, int N, int i)
+void printGrid(float **grid, int i)
 {
     clearStdout();
-    printf("Número de Células: %d \n", numberOfCells(grid, N));
+    printf("Número de Células: %d \n", numberOfCells(grid));
     for (int i = 0; i < N; i++)
     {
         printf("|");
         for (int j = 0; j < N; j++)
         {
-            if (grid[i][j] == 0.0)
+            if (grid[i][j] == 0.0f)
             {
                 printf("\033[1;30m██\033[0m");
             }
-            else if (grid[i][j] == 1.0)
+            else if (grid[i][j] < 0.2f)
             {
                 printf("\033[1;31m██\033[0m");
             }
-            else
+            else if (grid[i][j] < 0.4f)
+            {
+                printf("\033[1;33m██\033[0m");
+            }
+            else if (grid[i][j] < 0.6f)
             {
                 printf("\033[1;32m██\033[0m");
+            }
+            else if (grid[i][j] < 0.8f)
+            {
+                printf("\033[1;36m██\033[0m");
+            }
+            else
+            {
+                printf("\033[1;34m██\033[0m");
             }
         }
         printf("|\n");
@@ -156,25 +168,24 @@ void printGrid(float **grid, int N, int i)
 
 void addGlider(float **grid, int x, int y)
 {
-    grid[x][y + 1] = 1.0;
-    grid[x + 1][y + 2] = 1.0;
-    grid[x + 2][y] = 1.0;
-    grid[x + 2][y + 1] = 1.0;
-    grid[x + 2][y + 2] = 1.0;
+    grid[x][y + 1] = 1.0f;
+    grid[x + 1][y + 2] = 1.0f;
+    grid[x + 2][y] = 1.0f;
+    grid[x + 2][y + 1] = 1.0f;
+    grid[x + 2][y + 2] = 1.0f;
 }
 
-int main(int argc, char *argv[])
+void addRPentomino(float **grid, int x, int y)
 {
-    int N;
+    grid[x][y + 1] = 1.0f;
+    grid[x][y + 2] = 1.0f;
+    grid[x + 1][y] = 1.0f;
+    grid[x + 1][y + 1] = 1.0f;
+    grid[x + 2][y + 1] = 1.0f;
+}
 
-    if (argc <= 2)
-    {
-        N = DEFAULT_N;
-    }
-    else
-    {
-        N = atoi(argv[1]);
-    }
+int getResult(void (*addPatterns)(float **grid))
+{
 
     float **grid = (float **)malloc(sizeof(float *) * N);
     float **newgrid = (float **)malloc(sizeof(float *) * N);
@@ -186,25 +197,28 @@ int main(int argc, char *argv[])
 
         for (int j = 0; j < N; j++)
         {
-            grid[i][j] = 0.0;
-            newgrid[i][j] = 0.0;
+            grid[i][j] = 0.0f;
+            newgrid[i][j] = 0.0f;
         }
     }
 
-    addGlider(grid, 1, 1);
+    addPatterns(grid);
 
-    printGrid(grid, N, 0);
-    sleep(1);
+    // printGrid(grid, 0);
 
     for (int i = 0; i < ITERNUM; i++)
     {
-        iterate(grid, newgrid, N, N);
-        printGrid(newgrid, N, i);
+        iterate(grid, newgrid);
+        // printGrid(newgrid, N, i);
         swap(&grid, &newgrid);
-        usleep(200000);
+        // usleep(USEC * SLEEP_TIME);
     }
 
-    printf("Número de Células: %d \n", numberOfCells(newgrid, N));
+    // printGrid(grid, 2000);
+
+    int cells = numberOfCells(grid);
+
+    printf("Número de Células: %d \n", cells);
 
     for (int i = 0; i < N; i++)
     {
@@ -213,6 +227,21 @@ int main(int argc, char *argv[])
     }
     free(grid);
     free(newgrid);
+
+    return cells;
+}
+
+void testOne(float **grid)
+{
+    addGlider(grid, 1, 1);
+    addRPentomino(grid, 10, 30);
+}
+
+int main(int argc, char *argv[])
+{
+    int result1 = getResult(testOne);
+
+    printf("Resultado 1: %d\n", result1);
 
     return 0;
 }
