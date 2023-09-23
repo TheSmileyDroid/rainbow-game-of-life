@@ -241,7 +241,7 @@ int main(int argc, char *argv[])
 {
     int result1 = getResult(testOne);
 
-    printf("Resultado 1: %d\n", result1);
+    printf("Número final de células: %d\n", result1);
 
     return 0;
 }
