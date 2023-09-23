@@ -127,14 +127,13 @@ int numberOfCells(float **grid)
 
 void clearStdout() { printf("\033[H\033[J"); }
 
-void printGrid(float **grid, int i)
+void printGrid(float **grid, int i, int stop)
 {
-    clearStdout();
     printf("Número de Células: %d \n", numberOfCells(grid));
-    for (int i = 0; i < N; i++)
+    for (int i = 0; i < stop; i++)
     {
         printf("|");
-        for (int j = 0; j < N; j++)
+        for (int j = 0; j < stop; j++)
         {
             if (grid[i][j] == 0.0f)
             {
@@ -163,7 +162,6 @@ void printGrid(float **grid, int i)
         }
         printf("|\n");
     }
-    printf("Iteração: %d\n", i);
 }
 
 void addGlider(float **grid, int x, int y)
@@ -209,7 +207,10 @@ int getResult(void (*addPatterns)(float **grid))
     for (int i = 0; i < ITERNUM; i++)
     {
         iterate(grid, newgrid);
-        // printGrid(newgrid, N, i);
+        if (i < 6)
+        {
+            printGrid(grid, 0, 50);
+        }
         swap(&grid, &newgrid);
         // usleep(USEC * SLEEP_TIME);
     }
