@@ -1,3 +1,4 @@
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
@@ -8,6 +9,7 @@
 #define N 2048
 #define USEC 1000000
 #define SLEEP_TIME 0.001
+#define NUM_THREADS 8
 
 float getCell(float **grid, int i, int j) {
   return grid[(i + N) % N][(j + N) % N];
@@ -60,6 +62,13 @@ float average(float **grid, int i, int j) {
   sum += getCell(grid, i + 1, j + 1);
   return sum / 8.0f;
 }
+
+typedef struct {
+  int start;
+  int end;
+  float **grid;
+  float **newgrid;
+} thread_args;
 
 void iterate(float **grid, float **newgrid, int i, int j) {
 
@@ -134,6 +143,17 @@ void addRPentomino(float **grid, int x, int y) {
   grid[x + 2][y + 1] = 1.0f;
 }
 
+void *thread_function(void *arg) {
+  thread_args *args = (thread_args *)arg;
+  for (int i = args->start; i < args->end; i++) {
+    for (int j = 0; j < N; j++) {
+      iterate(args->grid, args->newgrid, i, j);
+    }
+  }
+
+  pthread_exit(NULL);
+}
+
 int getResult(void (*addPatterns)(float **grid)) {
 
   float **grid = (float **)malloc(sizeof(float *) * N);
@@ -156,11 +176,21 @@ int getResult(void (*addPatterns)(float **grid)) {
   struct timeval start, end;
   gettimeofday(&start, NULL);
 
+  pthread_t threads[NUM_THREADS];
+  thread_args args[NUM_THREADS];
+
   for (int i = 0; i < ITERNUM; i++) {
-    for (int i = 0; i < N; i++) {
-      for (int j = 0; j < N; j++) {
-        iterate(grid, newgrid, i, j);
-      }
+
+    for (int i = 0; i < NUM_THREADS; i++) {
+      args[i].start = i * (N / NUM_THREADS);
+      args[i].end = (i + 1) * (N / NUM_THREADS);
+      args[i].grid = grid;
+      args[i].newgrid = newgrid;
+      pthread_create(&threads[i], NULL, thread_function, (void *)&args[i]);
+    }
+
+    for (int i = 0; i < NUM_THREADS; i++) {
+      pthread_join(threads[i], NULL);
     }
 
     if (i < 6) {

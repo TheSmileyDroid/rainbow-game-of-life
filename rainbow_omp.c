@@ -1,3 +1,4 @@
+#include <omp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
@@ -8,6 +9,7 @@
 #define N 2048
 #define USEC 1000000
 #define SLEEP_TIME 0.001
+#define NUM_THREADS 4
 
 float getCell(float **grid, int i, int j) {
   return grid[(i + N) % N][(j + N) % N];
@@ -156,7 +158,10 @@ int getResult(void (*addPatterns)(float **grid)) {
   struct timeval start, end;
   gettimeofday(&start, NULL);
 
+  omp_set_num_threads(NUM_THREADS);
+
   for (int i = 0; i < ITERNUM; i++) {
+#pragma omp parallel for collapse(2)
     for (int i = 0; i < N; i++) {
       for (int j = 0; j < N; j++) {
         iterate(grid, newgrid, i, j);
