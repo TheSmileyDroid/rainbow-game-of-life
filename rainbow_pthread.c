@@ -11,11 +11,11 @@
 #define SLEEP_TIME 0.001
 #define NUM_THREADS 4
 
-static inline float getCell(float **grid, int i, int j) {
+float getCell(float **grid, int i, int j) {
   return grid[(i + N) % N][(j + N) % N];
 }
 
-static inline int getNeighbors(float **grid, int i, int j) {
+int getNeighbors(float **grid, int i, int j) {
   int neighbors = 0;
   if (getCell(grid, i - 1, j - 1) > 0.0f) {
     neighbors++;
@@ -50,7 +50,7 @@ void swap(float ***grid, float ***newgrid) {
   *newgrid = temp;
 }
 
-static inline float average(float **grid, int i, int j) {
+float average(float **grid, int i, int j) {
   float sum = 0.0f;
   sum += getCell(grid, i - 1, j - 1);
   sum += getCell(grid, i - 1, j);

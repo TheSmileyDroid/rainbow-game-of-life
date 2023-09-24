@@ -9,13 +9,13 @@
 #define N 2048
 #define USEC 1000000
 #define SLEEP_TIME 0.001
-#define NUM_THREADS 4
+#define NUM_THREADS 2
 
-static inline float getCell(float **grid, int i, int j) {
+float getCell(float **grid, int i, int j) {
   return grid[(i + N) % N][(j + N) % N];
 }
 
-static inline int getNeighbors(float **grid, int i, int j) {
+int getNeighbors(float **grid, int i, int j) {
   int neighbors = 0;
   if (getCell(grid, i - 1, j - 1) > 0.0f) {
     neighbors++;
@@ -50,7 +50,7 @@ void swap(float ***grid, float ***newgrid) {
   *newgrid = temp;
 }
 
-static inline float average(float **grid, int i, int j) {
+float average(float **grid, int i, int j) {
   float sum = 0.0f;
   sum += getCell(grid, i - 1, j - 1);
   sum += getCell(grid, i - 1, j);
@@ -166,7 +166,7 @@ int getResult(void (*addPatterns)(float **grid)) {
   gettimeofday(&start, NULL);
 
   for (int i = 0; i < ITERNUM; i++) {
-#pragma omp parallel for collapse(2)
+#pragma omp parallel for collapse(2) schedule(dynamic)
     for (int i = 0; i < N; i++) {
       for (int j = 0; j < N; j++) {
         iterate(grid, newgrid, i, j);
