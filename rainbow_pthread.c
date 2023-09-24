@@ -5,11 +5,11 @@
 #include <time.h>
 #include <unistd.h>
 
-#define ITERNUM 50
+#define ITERNUM 2001
 #define N 2048
 #define USEC 1000000
 #define SLEEP_TIME 0.001
-#define NUM_THREADS 8
+#define NUM_THREADS 4
 
 float getCell(float **grid, int i, int j) {
   return grid[(i + N) % N][(j + N) % N];

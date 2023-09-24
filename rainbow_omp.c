@@ -5,17 +5,17 @@
 #include <time.h>
 #include <unistd.h>
 
-#define ITERNUM 50
+#define ITERNUM 2001
 #define N 2048
 #define USEC 1000000
 #define SLEEP_TIME 0.001
 #define NUM_THREADS 4
 
-float getCell(float **grid, int i, int j) {
+static inline float getCell(float **grid, int i, int j) {
   return grid[(i + N) % N][(j + N) % N];
 }
 
-int getNeighbors(float **grid, int i, int j) {
+static inline int getNeighbors(float **grid, int i, int j) {
   int neighbors = 0;
   if (getCell(grid, i - 1, j - 1) > 0.0f) {
     neighbors++;
@@ -50,7 +50,7 @@ void swap(float ***grid, float ***newgrid) {
   *newgrid = temp;
 }
 
-float average(float **grid, int i, int j) {
+static inline float average(float **grid, int i, int j) {
   float sum = 0.0f;
   sum += getCell(grid, i - 1, j - 1);
   sum += getCell(grid, i - 1, j);
@@ -64,19 +64,24 @@ float average(float **grid, int i, int j) {
 }
 
 void iterate(float **grid, float **newgrid, int i, int j) {
-
   int neighbors = getNeighbors(grid, i, j);
-  if (grid[i][j] > 0.0f) {
+  float value = grid[i][j];
+  if (value > 0.0f) {
     if (neighbors < 2) {
       newgrid[i][j] = 0.0f;
     } else if (neighbors == 2 || neighbors == 3) {
-      newgrid[i][j] = 1.0f;
+      newgrid[i][j] = value;
     } else if (neighbors > 3) {
       newgrid[i][j] = 0.0f;
     }
   } else {
     if (neighbors == 3) {
-      newgrid[i][j] = average(grid, i, j);
+      float newvalue = average(grid, i, j);
+      if (newvalue > 0.0f)
+        newgrid[i][j] = newvalue;
+      else {
+        newgrid[i][j] = 0.1f;
+      }
     } else {
       newgrid[i][j] = 0.0f;
     }
@@ -155,10 +160,10 @@ int getResult(void (*addPatterns)(float **grid)) {
 
   // printGrid(grid, 0);
 
+  omp_set_num_threads(NUM_THREADS);
+
   struct timeval start, end;
   gettimeofday(&start, NULL);
-
-  omp_set_num_threads(NUM_THREADS);
 
   for (int i = 0; i < ITERNUM; i++) {
 #pragma omp parallel for collapse(2)
