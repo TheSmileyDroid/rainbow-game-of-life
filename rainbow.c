@@ -81,7 +81,12 @@ void iterate(float **grid, float **newgrid, int i, int j) {
     }
   } else {
     if (neighbors == 3) {
-      newgrid[i][j] = average(grid, i, j);
+      float newvalue = average(grid, i, j);
+      if (newvalue > 0.0f)
+        newgrid[i][j] = newvalue;
+      else {
+        newgrid[i][j] = 0.1f;
+      }
     } else {
       newgrid[i][j] = 0.0f;
     }
