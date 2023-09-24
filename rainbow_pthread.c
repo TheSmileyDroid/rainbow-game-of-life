@@ -1,3 +1,11 @@
+/**
+ * Integrantes:
+ *
+ * Eduardo de Oliveira Motta
+ * Gabriel Henrique Silva
+ */
+
+
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
